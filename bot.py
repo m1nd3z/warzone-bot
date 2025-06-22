@@ -237,6 +237,56 @@ async def test_all_apis(ctx, username: str = None, platform: str = "battlenet"):
     except Exception as e:
         await ctx.send(f"❌ Testavimo klaida: {str(e)}")
 
+@bot.command(name='testrapid')
+async def test_rapidapi(ctx, username: str = None, platform: str = "battlenet"):
+    """Testuoja RapidAPI COD API su konkrečiu žaidėju"""
+    if not username:
+        await ctx.send("❌ Nurodykite žaidėjo vardą: `!testrapid username platform`")
+        return
+        
+    await ctx.send(f"🚀 Testuojame RapidAPI COD API su **{username}** ({platform})...")
+    
+    try:
+        from rapidapi_cod import RapidAPICOD
+        api = RapidAPICOD()
+        
+        # Testuojame statistiką
+        await ctx.send("🔄 Gauname statistiką...")
+        stats = await api.get_player_stats(username, platform)
+        
+        if stats:
+            await ctx.send("✅ RapidAPI COD API veikia!")
+            
+            # Rodyti statistikos santrauką
+            message = f"📊 **{username}** statistikos santrauka:\n"
+            message += f"🎯 Žudymai: {stats.get('kills', 0):,}\n"
+            message += f"💀 Mirtys: {stats.get('deaths', 0):,}\n"
+            message += f"⚖️ K/D: {stats.get('kd_ratio', 0):.2f}\n"
+            message += f"🏆 Perėmimai: {stats.get('wins', 0):,}\n"
+            message += f"🎮 Žaidimai: {stats.get('games_played', 0):,}\n"
+            message += f"📈 SPM: {stats.get('score_per_minute', 0):.0f}"
+            
+            await ctx.send(message)
+        else:
+            await ctx.send("❌ RapidAPI COD API nepavyko gauti statistikos")
+        
+        # Testuojame žaidėjo informaciją
+        await ctx.send("🔄 Gauname žaidėjo informaciją...")
+        info = await api.get_player_info(username, platform)
+        
+        if info:
+            info_message = f"👤 **{username}** informacija:\n"
+            info_message += f"🌟 Lygis: {info.get('level', 'N/A')}\n"
+            info_message += f"⭐ Rangas: {info.get('rank', 'N/A')}\n"
+            info_message += f"🏅 Prestižas: {info.get('prestige', 'N/A')}"
+            
+            await ctx.send(info_message)
+        else:
+            await ctx.send("❌ Nepavyko gauti žaidėjo informacijos")
+            
+    except Exception as e:
+        await ctx.send(f"❌ Klaida testuojant RapidAPI: {str(e)}")
+
 def is_sleep_time():
     """Patikrina ar dabar yra miego režimo laikas"""
     try:

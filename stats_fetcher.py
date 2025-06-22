@@ -7,6 +7,7 @@ from reliable_api import ReliableAPI
 from tracker_api import TrackerGGAPI
 from alternative_api import AlternativeAPI
 from third_api import ThirdAPI
+from rapidapi_cod import RapidAPICOD
 
 class StatsFetcher:
     def __init__(self):
@@ -17,6 +18,7 @@ class StatsFetcher:
         self.tracker_api = TrackerGGAPI()
         self.alternative_api = AlternativeAPI()
         self.third_api = ThirdAPI()
+        self.rapidapi_cod = RapidAPICOD()
         self.players_file = "players.json"
         self.stats_history_file = "stats_history.json"
         self.load_players()
@@ -97,8 +99,18 @@ class StatsFetcher:
             if platform == "battle":
                 platform = "battlenet"
             
-            # 1. Pirmiausia bandome patikimą API (su fallback duomenimis)
-            print(f"Bandome patikimą API su {username}...")
+            # 1. Pirmiausia bandome RapidAPI COD (naujas, patikimas)
+            print(f"Bandome RapidAPI COD su {username}...")
+            stats = await self.rapidapi_cod.get_player_stats(username, platform)
+            
+            if stats:
+                # Pridedame laiko žymę
+                stats['timestamp'] = datetime.now().isoformat()
+                stats['source'] = 'rapidapi_cod'
+                return stats
+            
+            # 2. Jei RapidAPI nepavyko, bandome patikimą API (su fallback duomenimis)
+            print(f"RapidAPI nepavyko, bandome patikimą API su {username}...")
             stats = await self.reliable_api.get_player_stats(username, platform)
             
             if stats:
@@ -110,7 +122,7 @@ class StatsFetcher:
                     stats['source'] = 'reliable_api'
                 return stats
             
-            # 2. Jei patikimas API nepavyko, bandome Tracker.gg API
+            # 3. Jei patikimas API nepavyko, bandome Tracker.gg API
             print(f"Patikimas API nepavyko, bandome Tracker.gg API su {username}...")
             stats = await self.tracker_api.get_player_stats(username, platform)
             
@@ -120,7 +132,7 @@ class StatsFetcher:
                 stats['source'] = 'tracker_gg'
                 return stats
             
-            # 3. Jei Tracker.gg nepavyko, bandome alternatyvų API
+            # 4. Jei Tracker.gg nepavyko, bandome alternatyvų API
             print(f"Tracker.gg nepavyko, bandome alternatyvų API su {username}...")
             stats = await self.alternative_api.get_player_stats(username, platform)
             
@@ -130,7 +142,7 @@ class StatsFetcher:
                 stats['source'] = 'alternative_api'
                 return stats
             
-            # 4. Jei alternatyvus API nepavyko, bandome trečią API
+            # 5. Jei alternatyvus API nepavyko, bandome trečią API
             print(f"Alternatyvus API nepavyko, bandome trečią API su {username}...")
             stats = await self.third_api.get_player_stats(username, platform)
             

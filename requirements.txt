@@ -1,0 +1,6 @@
+discord.py==2.3.2
+python-dotenv==1.0.0
+aiohttp==3.9.1
+pytz==2023.3
+Brotli==1.1.0
+typing-extensions==4.8.0 
